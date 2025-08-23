@@ -1,9 +1,8 @@
 blueprint:
-  name: Motion-activated lights and switches (VALLHORN compatible)
+  name: Motion-activated lights and switches (optional targets)
   description: >
     Turn on lights and/or switches when motion is detected,
     and turn them off after a delay when no motion is detected.
-    Compatible with sensors that use "detected/clear" states (e.g. IKEA VALLHORN).
   domain: automation
   input:
     motion_sensors:
@@ -48,10 +47,10 @@ mode: restart
 trigger:
   - platform: state
     entity_id: !input motion_sensors
-    to: "detected"
+    to: "on"
   - platform: state
     entity_id: !input motion_sensors
-    to: "clear"
+    to: "off"
 
 condition: []
 
@@ -60,7 +59,7 @@ action:
       - conditions:
           - condition: state
             entity_id: !input motion_sensors
-            state: "detected"
+            state: "on"
         sequence:
           - if:
               - condition: template
@@ -79,13 +78,13 @@ action:
       - conditions:
           - condition: state
             entity_id: !input motion_sensors
-            state: "clear"
+            state: "off"
         sequence:
           - delay:
               seconds: !input delay_off
           - condition: state
             entity_id: !input motion_sensors
-            state: "clear"
+            state: "off"
           - if:
               - condition: template
                 value_template: "{{ (target_lights | length) > 0 }}"
