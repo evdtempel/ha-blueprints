@@ -1,8 +1,8 @@
 blueprint:
-  name: Motion-activated lights and switches (multi-sensor fix)
+  name: Motion-activated lights and switches (optional targets)
   description: >
-    Turn on lights and/or switches when motion is detected by any sensor, 
-    and turn them off after a delay once all sensors report no motion.
+    Turn on lights and/or switches when motion is detected, 
+    and turn them off after a delay when no motion is detected.
   domain: automation
   input:
     motion_sensors:
@@ -57,9 +57,9 @@ condition: []
 action:
   - choose:
       - conditions:
-          - condition: template
-            value_template: >
-              {{ expand(motion_sensors) | selectattr('state','eq','on') | list | count > 0 }}
+          - condition: state
+            entity_id: !input motion_sensors
+            state: "on"
         sequence:
           - service: light.turn_on
             target:
@@ -68,15 +68,15 @@ action:
             target:
               entity_id: !input target_switches
       - conditions:
-          - condition: template
-            value_template: >
-              {{ expand(motion_sensors) | selectattr('state','eq','on') | list | count == 0 }}
+          - condition: state
+            entity_id: !input motion_sensors
+            state: "off"
         sequence:
           - delay:
               seconds: !input delay_off
-          - condition: template
-            value_template: >
-              {{ expand(motion_sensors) | selectattr('state','eq','on') | list | count == 0 }}
+          - condition: state
+            entity_id: !input motion_sensors
+            state: "off"
           - service: light.turn_off
             target:
               entity_id: !input target_lights
