@@ -1,31 +1,29 @@
 blueprint:
-  name: Motion-activated lights and switches (optional targets)
+  name: Motion-activated lights and switches
   description: >
-    Turn on lights and/or switches when motion is detected,
+    Turn on lights and switches when motion is detected, 
     and turn them off after a delay when no motion is detected.
   domain: automation
   input:
     motion_sensors:
       name: Motion sensors
-      description: One or more motion/occupancy sensors to trigger the automation
+      description: One or more motion sensors to trigger the automation
       selector:
         entity:
           domain: binary_sensor
           multiple: true
 
     target_lights:
-      name: Lights (optional)
+      name: Lights
       description: Lights to control
-      default: []
       selector:
         entity:
           domain: light
           multiple: true
 
     target_switches:
-      name: Switches (optional)
+      name: Switches
       description: Switches to control (e.g., Sonoff relays)
-      default: []
       selector:
         entity:
           domain: switch
@@ -61,20 +59,12 @@ action:
             entity_id: !input motion_sensors
             state: "on"
         sequence:
-          - if:
-              - condition: template
-                value_template: "{{ (target_lights | length) > 0 }}"
-            then:
-              - service: light.turn_on
-                target:
-                  entity_id: !input target_lights
-          - if:
-              - condition: template
-                value_template: "{{ (target_switches | length) > 0 }}"
-            then:
-              - service: switch.turn_on
-                target:
-                  entity_id: !input target_switches
+          - service: light.turn_on
+            target:
+              entity_id: !input target_lights
+          - service: switch.turn_on
+            target:
+              entity_id: !input target_switches
       - conditions:
           - condition: state
             entity_id: !input motion_sensors
@@ -85,17 +75,9 @@ action:
           - condition: state
             entity_id: !input motion_sensors
             state: "off"
-          - if:
-              - condition: template
-                value_template: "{{ (target_lights | length) > 0 }}"
-            then:
-              - service: light.turn_off
-                target:
-                  entity_id: !input target_lights
-          - if:
-              - condition: template
-                value_template: "{{ (target_switches | length) > 0 }}"
-            then:
-              - service: switch.turn_off
-                target:
-                  entity_id: !input target_switches
+          - service: light.turn_off
+            target:
+              entity_id: !input target_lights
+          - service: switch.turn_off
+            target:
+              entity_id: !input target_switches
