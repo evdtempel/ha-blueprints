@@ -1,0 +1,84 @@
+blueprint:
+  name: Motion-activated lights and switches
+  description: >
+    Turn on lights and switches when motion is detected, 
+    and turn them off after a delay when no motion is detected.
+  domain: automation
+  input:
+    motion_sensors:
+      name: Motion sensors
+      description: One or more motion sensors to trigger the automation
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+          multiple: true
+
+    target_lights:
+      name: Lights
+      description: Lights to control
+      selector:
+        entity:
+          domain: light
+          multiple: true
+
+    target_switches:
+      name: Switches
+      description: Switches to control (e.g., Sonoff relays)
+      selector:
+        entity:
+          domain: switch
+          multiple: true
+
+    delay_off:
+      name: Delay before turning off
+      description: Time to wait after no motion before turning everything off
+      default: 120
+      selector:
+        number:
+          min: 10
+          max: 3600
+          unit_of_measurement: seconds
+          mode: slider
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensors
+    to: "on"
+  - platform: state
+    entity_id: !input motion_sensors
+    to: "off"
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensors
+            state: "on"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input target_lights
+          - service: switch.turn_on
+            target:
+              entity_id: !input target_switches
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensors
+            state: "off"
+        sequence:
+          - delay:
+              seconds: !input delay_off
+          - condition: state
+            entity_id: !input motion_sensors
+            state: "off"
+          - service: light.turn_off
+            target:
+              entity_id: !input target_lights
+          - service: switch.turn_off
+            target:
+              entity_id: !input target_switches
