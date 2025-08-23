@@ -1,7 +1,7 @@
 blueprint:
-  name: Motion-activated lights and switches
+  name: Motion-activated lights and switches (optional targets)
   description: >
-    Turn on lights and switches when motion is detected, 
+    Turn on lights and/or switches when motion is detected, 
     and turn them off after a delay when no motion is detected.
   domain: automation
   input:
@@ -14,16 +14,18 @@ blueprint:
           multiple: true
 
     target_lights:
-      name: Lights
+      name: Lights (optional)
       description: Lights to control
+      default: []
       selector:
         entity:
           domain: light
           multiple: true
 
     target_switches:
-      name: Switches
+      name: Switches (optional)
       description: Switches to control (e.g., Sonoff relays)
+      default: []
       selector:
         entity:
           domain: switch
