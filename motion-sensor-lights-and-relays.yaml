@@ -1,8 +1,9 @@
 blueprint:
-  name: Motion-activated lights and switches (optional targets)
+  name: Motion-activated lights and switches (optional lux sensors)
   description: >
-    Turn on lights and/or switches when motion is detected, 
-    and turn them off after a delay when no motion is detected.
+    Turn on lights and/or switches when motion is detected.  
+    Optionally require that at least one lux sensor reports low light.  
+    Turn them off after a delay once all motion sensors report no motion.
   domain: automation
   input:
     motion_sensors:
@@ -12,6 +13,26 @@ blueprint:
         entity:
           domain: binary_sensor
           multiple: true
+
+    lux_sensors:
+      name: Lux sensors (optional)
+      description: One or more sensors that measure light level (in lux)
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          multiple: true
+
+    lux_threshold:
+      name: Lux threshold
+      description: Maximum lux level at which lights should turn on
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 500
+          unit_of_measurement: lx
+          mode: slider
 
     target_lights:
       name: Lights (optional)
@@ -52,14 +73,26 @@ trigger:
     entity_id: !input motion_sensors
     to: "off"
 
-condition: []
+variables:
+  lux_sensors: !input lux_sensors
+  lux_threshold: !input lux_threshold
 
 action:
   - choose:
+      # --- Motion detected ---
       - conditions:
           - condition: state
             entity_id: !input motion_sensors
             state: "on"
+          - condition: template
+            value_template: >
+              {% if lux_sensors | length == 0 %}
+                true
+              {% else %}
+                {% set values = expand(lux_sensors) | map(attribute='state') | list %}
+                {% set numeric = values | map('float', default=9999) | list %}
+                {{ numeric | min < lux_threshold }}
+              {% endif %}
         sequence:
           - service: light.turn_on
             target:
@@ -67,6 +100,8 @@ action:
           - service: switch.turn_on
             target:
               entity_id: !input target_switches
+
+      # --- Motion cleared -> turn off after delay ---
       - conditions:
           - condition: state
             entity_id: !input motion_sensors
