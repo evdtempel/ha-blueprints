@@ -98,6 +98,8 @@ trigger:
 variables:
   lux_sensors: !input lux_sensors
   lux_threshold: !input lux_threshold
+  night_brightness: !input night_brightness
+  day_brightness: !input day_brightness
 
 action:
   - choose:
@@ -122,9 +124,9 @@ action:
             data:
               brightness_pct: >
                 {% if is_state('schedule.dim_lights', 'on') %}
-                  "{{ !input night_brightness }}"
+                  {{ night_brightness }}
                 {% else %}
-                  "{{ !input day_brightness }}"
+                  {{ day_brightness }}
                 {% endif %}
           - service: switch.turn_on
             target:
