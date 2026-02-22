@@ -63,6 +63,28 @@ blueprint:
           unit_of_measurement: seconds
           mode: slider
 
+    day_brightness:
+      name: Day brightness
+      description: Brightness percentage for lights during the day
+      default: 90
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: '%'
+          mode: slider
+
+    night_brightness:
+      name: Night brightness
+      description: Brightness percentage for lights during the night
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: '%'
+          mode: slider
+
 mode: restart
 
 trigger:
@@ -97,6 +119,13 @@ action:
           - service: light.turn_on
             target:
               entity_id: !input target_lights
+            data:
+              brightness_pct: >
+                {% if is_state('schedule.dim_lights', 'on') %}
+                  {{ !input night_brightness }}
+                {% else %}
+                  {{ !input day_brightness }}
+                {% endif %}
           - service: switch.turn_on
             target:
               entity_id: !input target_switches
